@@ -1,0 +1,143 @@
+Algoritmo MesaDePartesDigital
+   Definir opcion Como Entero
+   CargarDatosDesdeArchivo()
+
+   Repetir
+      Escribir "================================================="
+      Escribir " MESA DE PARTES DIGITAL - MUNICIPALIDAD LOS OLIVOS"
+      Escribir "================================================="
+      Escribir "1. Registrar nueva solicitud"
+      Escribir "2. Buscar expediente por código o DNI"
+      Escribir "3. Listar expedientes registrados"
+      Escribir "4. Guardar y Salir"
+      Escribir "Seleccione una opción: "
+      Leer opcion
+
+      Segun opcion Hacer
+         1:
+            RegistrarSolicitud()
+         2:
+            BuscarExpediente()
+         3:
+            ListarExpedientes()
+         4:
+            GuardarDatosEnArchivo()
+            Escribir "Datos almacenados correctamente. Saliendo..."
+         De Otro Modo:
+            Escribir "Opción inválida. Intente de nuevo."
+      FinSegun
+   Hasta Que opcion = 4
+FinAlgoritmo
+
+Funcion RegistrarSolicitud()
+   Definir dni, nombres, asunto, codigo Como Cadena
+
+   Repetir
+      Escribir "Ingrese DNI (8 dígitos numéricos): "
+      Leer dni
+   Hasta Que Longitud(dni) = 8 Y EsNumerico(dni)
+
+   Repetir
+      Escribir "Ingrese Apellidos y Nombres: "
+      Leer nombres
+   Hasta Que Longitud(nombres) > 0
+
+   Escribir "Ingrese el asunto del trámite: "
+   Leer asunto
+
+   codigo <- "EXP-2026-" + RellenarCeros(TotalRegistros + 1, 4)
+   GuardarEnLista(codigo, dni, nombres, asunto)
+
+   Escribir "---------------------------------------------"
+   Escribir "CARGO DE RECEPCIÓN DIGITAL GENERADO"
+   Escribir "Código asignado : ", codigo
+   Escribir "Ciudadano       : ", nombres
+   Escribir "Estado          : REGISTRADO CON ÉXITO"
+   Escribir "---------------------------------------------"
+FinFuncion
+
+Funcion BuscarExpediente()
+   Definir termino Como Cadena
+   Definir encontrado Como Logico
+
+   Escribir "Ingrese Código de Expediente o DNI a buscar: "
+   Leer termino
+   termino <- Mayusculas(termino)
+   encontrado <- Falso
+
+   Para i <- 1 Hasta TotalRegistros Hacer
+      Si lista[i].codigo = termino O lista[i].dni = termino Entonces
+         Escribir "Código : ", lista[i].codigo
+         Escribir "DNI    : ", lista[i].dni
+         Escribir "Titular: ", lista[i].nombre
+         Escribir "Asunto : ", lista[i].asunto
+         encontrado <- Verdadero
+      FinSi
+   FinPara
+
+   Si encontrado = Falso Entonces
+      Escribir "No se encontró ningún expediente registrado con esos datos."
+   FinSi
+FinFuncion
+
+Funcion ListarExpedientes()
+   Definir criterio Como Entero
+
+   Si TotalRegistros = 0 Entonces
+      Escribir "No existen trámites registrados en el sistema."
+   SiNo
+      Escribir "Ordenar por: 1) Código  2) DNI  3) Solicitante"
+      Leer criterio
+      Segun criterio Hacer
+         1:
+            OrdenarExpedientes("codigo")
+         2:
+            OrdenarExpedientes("dni")
+         3:
+            OrdenarExpedientes("nombre")
+      FinSegun
+
+      Para i <- 1 Hasta TotalRegistros Hacer
+         Escribir lista[i].codigo, " | ", lista[i].dni, " | ", lista[i].nombre, " | ", lista[i].asunto
+      FinPara
+   FinSi
+FinFuncion
+
+Funcion OrdenarExpedientes(campo)
+   Definir i, j Como Entero
+   Definir aux Como Registro
+
+   Para i <- 1 Hasta TotalRegistros - 1 Hacer
+      Para j <- 1 Hasta TotalRegistros - i Hacer
+         Si Mayusculas(lista[j].campo) > Mayusculas(lista[j + 1].campo) Entonces
+            aux <- lista[j]
+            lista[j] <- lista[j + 1]
+            lista[j + 1] <- aux
+         FinSi
+      FinPara
+   FinPara
+FinFuncion
+
+Funcion CargarDatosDesdeArchivo()
+   TotalRegistros <- 0
+   Si ExisteArchivo("expedientes.txt") Entonces
+      Abrir "expedientes.txt" para lectura
+      Mientras NO FinDeArchivo Hacer
+         Leer linea
+         partes <- Separar(linea, "|")
+         Si Longitud(partes) = 4 Entonces
+            TotalRegistros <- TotalRegistros + 1
+            lista[TotalRegistros] <- (partes[1], partes[2], partes[3], partes[4])
+         FinSi
+      FinMientras
+      Cerrar archivo
+   FinSi
+FinFuncion
+
+Funcion GuardarDatosEnArchivo()
+   Abrir "expedientes.txt" para escritura
+   Para i <- 1 Hasta TotalRegistros Hacer
+      Escribir en archivo lista[i].codigo + "|" + lista[i].dni + "|" + lista[i].nombre + "|" + lista[i].asunto
+   FinPara
+   Cerrar archivo
+FinFuncion
