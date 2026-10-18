@@ -48,7 +48,11 @@ def registrar(lista):
             break
         print("El nombre no puede estar vacío.")
 
-    asunto = input("Asunto o trámite a solicitar: ").strip()
+    while True:
+        asunto = input("Asunto o trámite a solicitar: ").strip()
+        if len(asunto) > 0:
+            break
+        print("El asunto no puede estar vacío.")
 
     # Generación de código correlativo tipo EXP-2026-0001
     codigo = f"EXP-2026-{(len(lista) + 1):04d}"
