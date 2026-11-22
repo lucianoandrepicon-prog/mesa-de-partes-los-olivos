@@ -1,13 +1,24 @@
-# main.py
 import os
 
 ARCHIVO_DATOS = "expedientes.txt"
-
 
 def validar_dni(dni):
     """Verifica que el DNI sea numérico y tenga 8 cifras."""
     return len(dni) == 8 and dni.isdigit()
 
+def normalizar_texto(texto):
+    """Limpia espacios sobrantes y estandariza en minúsculas para comparar."""
+    return " ".join(texto.strip().lower().split())
+
+def buscar_duplicado(lista, dni, asunto):
+    """Busca si ya existe un trámite con el mismo DNI y asunto."""
+    asunto_norm = normalizar_texto(asunto)
+    dni_limpio = dni.strip()
+
+    for item in lista:
+        if item["dni"].strip() == dni_limpio and normalizar_texto(item["asunto"]) == asunto_norm:
+            return item
+    return None
 
 def cargar_expedientes():
     """Lee el archivo de texto y devuelve los registros en una lista."""
@@ -25,16 +36,14 @@ def cargar_expedientes():
                     })
     return lista
 
-
 def guardar_expedientes(lista):
     """Guarda todos los trámites registrados en el archivo de texto."""
     with open(ARCHIVO_DATOS, "w", encoding="utf-8") as archivo:
         for item in lista:
             archivo.write(f"{item['codigo']}|{item['dni']}|{item['nombre']}|{item['asunto']}\n")
 
-
 def registrar(lista):
-    """Pide los datos, valida y asigna un nuevo código correlativo."""
+    """Pide los datos, valida, detecta duplicados y asigna un nuevo código correlativo."""
     print("\n--- REGISTRO DE NUEVA SOLICITUD ---")
     while True:
         dni = input("Ingrese DNI (8 dígitos): ").strip()
@@ -53,6 +62,19 @@ def registrar(lista):
         if len(asunto) > 0:
             break
         print("El asunto no puede estar vacío.")
+
+    # Verificación de posible trámite duplicado (mismo DNI y mismo asunto)
+    duplicado = buscar_duplicado(lista, dni, asunto)
+    if duplicado is not None:
+        print("\n[AVISO] Ya existe un expediente registrado con este mismo DNI y asunto:")
+        print(f"  - Código existente : {duplicado['codigo']}")
+        print(f"  - Solicitante      : {duplicado['nombre']}")
+        print(f"  - Asunto           : {duplicado['asunto']}")
+
+        confirmar = input("¿Desea registrar este trámite nuevamente de todas formas? (s/n): ").strip().lower()
+        if confirmar != "s":
+            print("Registro cancelado para evitar duplicidad.")
+            return
 
     # Generación de código correlativo tipo EXP-2026-0001
     codigo = f"EXP-2026-{(len(lista) + 1):04d}"
@@ -73,7 +95,6 @@ def registrar(lista):
     print("ESTADO               : REGISTRADO CON ÉXITO")
     print("=" * 45)
 
-
 def buscar(lista):
     """Busca trámites por coincidencia de código o DNI."""
     termino = input("\nIngrese Código de Expediente o DNI a buscar: ").strip().upper()
@@ -90,8 +111,7 @@ def buscar(lista):
     if not encontrado:
         print("No se encontró ningún expediente registrado con esos datos.")
 
-
-# ---------- NUEVO: ordenamiento ----------
+# ---------- ordenamiento ----------
 def ordenar_expedientes(lista, campo):
     """Ordena la lista por 'campo' con el método de burbuja (de menor a mayor)."""
     n = len(lista)
@@ -101,14 +121,13 @@ def ordenar_expedientes(lista, campo):
                 lista[j], lista[j + 1] = lista[j + 1], lista[j]
 # -----------------------------------------
 
-
 def listar(lista):
     """Muestra todos los trámites registrados, ordenados según el criterio elegido."""
     if not lista:
         print("\nNo existen trámites registrados en el sistema.")
         return
 
-    # NUEVO: pedir el criterio de orden antes de mostrar
+    # pedir el criterio de orden antes de mostrar
     print("\nOrdenar por: 1) Código  2) DNI  3) Solicitante")
     campos = {"1": "codigo", "2": "dni", "3": "nombre"}
     criterio = input("Opción: ").strip()
@@ -121,7 +140,6 @@ def listar(lista):
     for item in lista:
         print(f"{item['codigo']:<15} | {item['dni']:<10} | {item['nombre'][:18]:<20} | {item['asunto']}")
     print("=" * 65)
-
 
 def main():
     expedientes = cargar_expedientes()
@@ -145,7 +163,6 @@ def main():
             break
         else:
             print("Opción no válida. Intente nuevamente.")
-
 
 if __name__ == "__main__":
     main()
